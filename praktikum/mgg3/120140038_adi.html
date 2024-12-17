@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prak 3 | Daftar Tugas Dinamis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-3xl bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Daftar Tugas</h1>
+
+        <!-- Form Tambah Tugas -->
+        <form id="taskForm" class="flex flex-col md:flex-row items-center gap-4 mb-6">
+            <input type="text" id="taskTitle" placeholder="Judul tugas" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+            <input type="date" id="taskDueDate" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+            <select id="taskPriority" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400">
+                <option value="Tinggi">Tinggi</option>
+                <option value="Sedang">Sedang</option>
+                <option value="Rendah">Rendah</option>
+            </select>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Tambah</button>
+        </form>
+
+        <!-- Filter dan Sortir -->
+        <div class="flex flex-wrap justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+                <button class="filter-btn bg-gray-200 px-3 py-1 rounded-lg" data-filter="all">Semua</button>
+                <button class="filter-btn bg-gray-200 px-3 py-1 rounded-lg" data-filter="active">Aktif</button>
+                <button class="filter-btn bg-gray-200 px-3 py-1 rounded-lg" data-filter="completed">Selesai</button>
+            </div>
+            <div>
+                <button id="sortByDate" class="bg-gray-200 px-3 py-1 rounded-lg">Urutkan Berdasarkan Tanggal</button>
+            </div>
+        </div>
+
+        <!-- Daftar Tugas -->
+        <ul id="taskList" class="space-y-4"></ul>
+
+        <!-- Statistik -->
+        <div id="taskStats" class="mt-6 text-gray-700"></div>
+    </div>
+
+    <script>
+        // Data & DOM Elements
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        const taskForm = document.getElementById('taskForm');
+        const taskList = document.getElementById('taskList');
+        const taskStats = document.getElementById('taskStats');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+
+        // Render Task List
+        function renderTasks(filter = 'all') {
+            taskList.innerHTML = '';
+            const filteredTasks = tasks.filter(task => {
+                if (filter === 'active') return !task.completed;
+                if (filter === 'completed') return task.completed;
+                return true;
+            });
+            filteredTasks.forEach(task => {
+                const taskItem = document.createElement('li');
+                taskItem.className = `p-4 border rounded-lg flex justify-between items-center bg-${task.completed ? 'green' : 'white'}-100`;
+                taskItem.innerHTML = `
+                    <div>
+                        <h3 class="text-lg font-semibold ${task.completed ? 'line-through' : ''}">${task.title}</h3>
+                        <p class="text-sm text-gray-500">${task.dueDate || 'Tanpa Tanggal'} - Prioritas: ${task.priority}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="bg-yellow-500 text-white px-2 py-1 rounded" onclick="editTask('${task.id}')">Edit</button>
+                        <button class="bg-${task.completed ? 'gray' : 'green'}-500 text-white px-2 py-1 rounded" onclick="toggleComplete('${task.id}')">${task.completed ? 'Belum Selesai' : 'Selesai'}</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteTask('${task.id}')">Hapus</button>
+                    </div>
+                `;
+                taskList.appendChild(taskItem);
+            });
+            updateStats();
+        }
+
+        // Tambah Tugas
+        taskForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const title = document.getElementById('taskTitle').value.trim();
+            const dueDate = document.getElementById('taskDueDate').value;
+            const priority = document.getElementById('taskPriority').value;
+            if (!title) return alert('Judul tugas tidak boleh kosong!');
+            tasks.push({
+                id: Date.now().toString(),
+                title,
+                dueDate,
+                priority,
+                completed: false
+            });
+            saveTasks();
+            renderTasks();
+            taskForm.reset();
+        });
+
+        // Toggle Complete
+        function toggleComplete(id) {
+            const task = tasks.find(task => task.id === id);
+            if (task) task.completed = !task.completed;
+            saveTasks();
+            renderTasks();
+        }
+
+        // Hapus Tugas
+        function deleteTask(id) {
+            tasks = tasks.filter(task => task.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+
+        // Edit Tugas
+        function editTask(id) {
+            const task = tasks.find(task => task.id === id);
+            if (!task) return;
+            const newTitle = prompt('Edit Judul:', task.title);
+            if (newTitle !== null) task.title = newTitle;
+            saveTasks();
+            renderTasks();
+        }
+
+        // Simpan ke Local Storage
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Update Statistik
+        function updateStats() {
+            const completed = tasks.filter(task => task.completed).length;
+            const total = tasks.length;
+            taskStats.innerText = `Tugas selesai: ${completed} / ${total}`;
+        }
+
+        // Filter Tugas
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const filter = button.getAttribute('data-filter');
+                renderTasks(filter);
+            });
+        });
+
+        // Sortir Berdasarkan Tanggal
+        document.getElementById('sortByDate').addEventListener('click', () => {
+            tasks.sort((a, b) => new Date(a.dueDate || Infinity) - new Date(b.dueDate || Infinity));
+            saveTasks();
+            renderTasks();
+        });
+
+        // Inisialisasi
+        renderTasks();
+    </script>
+</body>
+</html>

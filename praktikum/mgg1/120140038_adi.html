@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prak 1</title>
+</head>
+<body>
+    <!-- Buatlah 5 inputan dengan 1 button
+    Buatlah Tabel dengan 4 kolom
+    dengan menggunakan js -->
+    <form>
+        <input type="text" name="nama" id="nama" placeholder="Nama">
+        <input type="text" name="nim" id="nim" placeholder="NIM">
+        <input type="text" name="prodi" id="prodi" placeholder="Prodi">
+        <input type="text" name="fakultas" id="fakultas" placeholder="Fakultas">
+        <input type="submit" value="Submit">
+    </form>
+
+    <table border="1">
+        <tr>
+            <th>Nama</th>
+            <th>NIM</th>
+            <th>Prodi</th>
+            <th>Fakultas</th>
+        </tr>
+        <tr>
+            <td id="namaC"></td>
+            <td id="nimC"></td>
+            <td id="prodiC"></td>
+            <td id="fakultasC"></td>
+        </tr>
+    </table>
+
+    <script>
+        const form = document.querySelector('form');
+        const nama = document.querySelector('#nama');
+        const nim = document.querySelector('#nim');
+        const prodi = document.querySelector('#prodi');
+        const fakultas = document.querySelector('#fakultas');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.querySelector('#namaC').innerText = nama.value;
+            document.querySelector('#nimC').innerText = nim.value;
+            document.querySelector('#prodiC').innerText = prodi.value;
+            document.querySelector('#fakultasC').innerText = fakultas.value;
+        });
+    </script>
+</body>
+</html>
